@@ -6,7 +6,7 @@
 
 {% if app.user %}
     <p>
-        You are logged in as {{ app.user.userIdentifier }}, <a href="{{ logout_path() }}">Logout</a>
+        You are logged in as {{ app.user.userIdentifier }}, <a href="{{ logout_path() }}">Se déconnecter</a>
     </p>
 {% else%}
     <p>
