@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Repository\CategoryRepository;
 use App\Repository\ProductRepository;
+use App\Service\CartService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,6 +17,7 @@ final class ProductController extends AbstractController
         Request $request,
         ProductRepository $productRepository,
         CategoryRepository $categoryRepository,
+        CartService $cartService,
     ): Response
     {
         $selectedCategoryIds = array_values(array_unique(array_filter(
@@ -79,6 +81,30 @@ final class ProductController extends AbstractController
             'page' => $page,
             'totalPages' => $totalPages,
             'limit' => $limit,
+            'cartItemCount' => $cartService->itemCount(),
+        ]);
+    }
+
+    #[Route('/product/{id<\d+>}', name: 'app_product_show', methods: ['GET'])]
+    public function show(
+        int $id,
+        ProductRepository $productRepository,
+        CartService $cartService,
+    ): Response {
+        $product = $productRepository->findVisibleById($id);
+        if ($product === null) {
+            throw $this->createNotFoundException('Product not found.');
+        }
+
+        $relatedProducts = $productRepository->findRelatedProducts($product);
+
+        return $this->render('product/show.html.twig', [
+            'product' => $product,
+            'relatedProducts' => $relatedProducts,
+            'cartItemCount' => $cartService->itemCount(),
+            'search' => null,
+            'sort' => null,
+            'selectedCategories' => [],
         ]);
     }
 }
