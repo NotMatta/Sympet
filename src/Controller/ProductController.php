@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Repository\CategoryRepository;
 use App\Repository\ProductRepository;
 use App\Service\CartService;
+use App\Service\SavedItemService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,6 +19,7 @@ final class ProductController extends AbstractController
         ProductRepository $productRepository,
         CategoryRepository $categoryRepository,
         CartService $cartService,
+        SavedItemService $savedItemService,
     ): Response
     {
         $selectedCategoryIds = array_values(array_unique(array_filter(
@@ -64,6 +66,11 @@ final class ProductController extends AbstractController
 
         $categories = $categoryRepository->findBy([], ['name' => 'ASC']);
 
+        $savedProductIds = array_map(
+            static fn ($savedItem): int => (int) $savedItem->getProduct()?->getId(),
+            array_filter($savedItemService->listForCurrentUser(), static fn ($savedItem): bool => $savedItem->getProduct() !== null),
+        );
+
         return $this->render('product/index.html.twig', [
             'products' => $result['products'],
             'categories' => $categories,
@@ -82,6 +89,8 @@ final class ProductController extends AbstractController
             'totalPages' => $totalPages,
             'limit' => $limit,
             'cartItemCount' => $cartService->itemCount(),
+            'savedItemsCount' => $savedItemService->count(),
+            'savedProductIds' => $savedProductIds,
         ]);
     }
 
@@ -90,6 +99,7 @@ final class ProductController extends AbstractController
         int $id,
         ProductRepository $productRepository,
         CartService $cartService,
+        SavedItemService $savedItemService,
     ): Response {
         $product = $productRepository->findVisibleById($id);
         if ($product === null) {
@@ -102,6 +112,11 @@ final class ProductController extends AbstractController
             'product' => $product,
             'relatedProducts' => $relatedProducts,
             'cartItemCount' => $cartService->itemCount(),
+            'savedItemsCount' => $savedItemService->count(),
+            'savedProductIds' => array_map(
+                static fn ($savedItem): int => (int) $savedItem->getProduct()?->getId(),
+                array_filter($savedItemService->listForCurrentUser(), static fn ($savedItem): bool => $savedItem->getProduct() !== null),
+            ),
             'search' => null,
             'sort' => null,
             'selectedCategories' => [],

@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Repository\ProductRepository;
 use App\Service\CartService;
+use App\Service\SavedItemService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -18,6 +19,7 @@ final class CartController extends AbstractController
     public function index(
         CartService $cartService,
         ProductRepository $productRepository,
+        SavedItemService $savedItemService,
     ): Response {
         $details = $cartService->details($productRepository);
 
@@ -25,6 +27,7 @@ final class CartController extends AbstractController
             'items' => $details['items'],
             'subtotal' => $details['subtotal'],
             'cartItemCount' => $cartService->itemCount(),
+            'savedItemsCount' => $savedItemService->count(),
             'search' => null,
             'sort' => null,
             'selectedCategories' => [],
@@ -55,12 +58,7 @@ final class CartController extends AbstractController
             return $this->cartErrorResponse($request, 'This product is out of stock.', Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $currentQuantity = $cartService->all()[$productId] ?? 0;
-        if ($currentQuantity + $quantity > $stock) {
-            return $this->cartErrorResponse($request, 'Requested quantity exceeds stock.', Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-
-        $cartService->add($productId, $quantity, $stock);
+        $cartService->add($product, $quantity);
 
         if ($request->isXmlHttpRequest()) {
             return $this->json([
@@ -97,7 +95,7 @@ final class CartController extends AbstractController
 
         $stock = max(0, $product->getQuantity() ?? 0);
         if ($stock === 0) {
-            $cartService->remove($id);
+            $cartService->remove($product);
             $this->addFlash('warning', 'Out of stock item removed from cart.');
 
             return $this->redirectToRoute('app_cart_index');
@@ -108,7 +106,7 @@ final class CartController extends AbstractController
             $this->addFlash('warning', 'Quantity was adjusted to available stock.');
         }
 
-        $cartService->update($id, $quantity, $stock);
+        $cartService->update($product, $quantity);
 
         return $this->redirectToRoute('app_cart_index');
     }
@@ -117,13 +115,17 @@ final class CartController extends AbstractController
     public function remove(
         int $id,
         Request $request,
+        ProductRepository $productRepository,
         CartService $cartService,
     ): RedirectResponse {
         if (!$this->isCsrfTokenValid('cart_remove_'.$id, (string) $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Invalid CSRF token.');
         }
 
-        $cartService->remove($id);
+        $product = $productRepository->findVisibleById($id);
+        if ($product !== null) {
+            $cartService->remove($product);
+        }
 
         return $this->redirectToRoute('app_cart_index');
     }

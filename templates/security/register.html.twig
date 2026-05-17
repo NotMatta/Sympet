@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Register | Sympet{% endblock %}
+
+{% block body %}
+<div class="min-h-screen noto-sans flex flex-col bg-gray-50">
+    {% include 'includes/navbar.html.twig' with {
+        cartItemCount: cartItemCount,
+        savedItemsCount: savedItemsCount,
+        search: search,
+        sort: sort,
+        selectedCategories: selectedCategories
+    } %}
+    <main class="grow px-4 py-10">
+        <div class="mx-auto max-w-md rounded-lg border border-black/10 bg-white p-6 shadow-sm">
+            <h1 class="text-2xl font-bold text-gray-900 mb-4">Create account</h1>
+            {{ form_start(registrationForm, {attr: {class: 'space-y-4'}}) }}
+                <div>
+                    {{ form_label(registrationForm.email, null, {label_attr: {class: 'text-sm font-medium text-gray-700'}}) }}
+                    {{ form_widget(registrationForm.email, {attr: {class: 'mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm'}}) }}
+                    {{ form_errors(registrationForm.email) }}
+                </div>
+                <div>
+                    {{ form_label(registrationForm.plainPassword.first, null, {label_attr: {class: 'text-sm font-medium text-gray-700'}}) }}
+                    {{ form_widget(registrationForm.plainPassword.first, {attr: {class: 'mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm'}}) }}
+                    {{ form_errors(registrationForm.plainPassword.first) }}
+                </div>
+                <div>
+                    {{ form_label(registrationForm.plainPassword.second, null, {label_attr: {class: 'text-sm font-medium text-gray-700'}}) }}
+                    {{ form_widget(registrationForm.plainPassword.second, {attr: {class: 'mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm'}}) }}
+                    {{ form_errors(registrationForm.plainPassword.second) }}
+                </div>
+                <button type="submit" class="w-full rounded-md bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600">Register</button>
+            {{ form_end(registrationForm) }}
+            <p class="mt-4 text-sm text-gray-600">Already have an account? <a href="{{ path('app_login') }}" class="text-orange-600">Login</a></p>
+        </div>
+    </main>
+</div>
+{% endblock %}

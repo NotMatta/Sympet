@@ -1,0 +1,81 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Account Settings | Sympet{% endblock %}
+
+{% block body %}
+<div class="min-h-screen noto-sans flex flex-col bg-gray-50">
+    {% include 'includes/navbar.html.twig' with {
+        cartItemCount: cartItemCount,
+        savedItemsCount: savedItemsCount,
+        search: search,
+        sort: sort,
+        selectedCategories: selectedCategories
+    } %}
+    <main class="grow px-4 py-6">
+        <div class="mx-auto max-w-5xl space-y-6">
+            {% for type, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="rounded-md px-4 py-3 text-sm {% if type == 'success' %}bg-emerald-50 text-emerald-700{% elseif type == 'error' %}bg-red-50 text-red-700{% else %}bg-amber-50 text-amber-700{% endif %}">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+            <h1 class="text-2xl font-bold text-gray-900">Settings</h1>
+            <section class="rounded-lg border border-black/10 bg-white p-5 shadow-sm">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Profile settings</h2>
+                {{ form_start(profileForm, {attr: {class: 'grid gap-4 sm:grid-cols-2'}}) }}
+                    <div>
+                        {{ form_label(profileForm.displayName, null, {label_attr: {class: 'text-sm font-medium text-gray-700'}}) }}
+                        {{ form_widget(profileForm.displayName, {attr: {class: 'mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm'}}) }}
+                        {{ form_errors(profileForm.displayName) }}
+                    </div>
+                    <div>
+                        {{ form_label(profileForm.email, null, {label_attr: {class: 'text-sm font-medium text-gray-700'}}) }}
+                        {{ form_widget(profileForm.email, {attr: {class: 'mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm'}}) }}
+                        {{ form_errors(profileForm.email) }}
+                    </div>
+                    <div class="sm:col-span-2">
+                        {{ form_label(profileForm.avatarUrl, null, {label_attr: {class: 'text-sm font-medium text-gray-700'}}) }}
+                        {{ form_widget(profileForm.avatarUrl, {attr: {class: 'mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm'}}) }}
+                        {{ form_errors(profileForm.avatarUrl) }}
+                    </div>
+                    <div class="sm:col-span-2">
+                        <button type="submit" class="rounded-md bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600">Save profile</button>
+                    </div>
+                {{ form_end(profileForm) }}
+            </section>
+
+            <section class="rounded-lg border border-black/10 bg-white p-5 shadow-sm">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Change password</h2>
+                {{ form_start(passwordForm, {attr: {class: 'grid gap-4 sm:grid-cols-2'}}) }}
+                    <div class="sm:col-span-2">
+                        {{ form_label(passwordForm.currentPassword, null, {label_attr: {class: 'text-sm font-medium text-gray-700'}}) }}
+                        {{ form_widget(passwordForm.currentPassword, {attr: {class: 'mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm'}}) }}
+                        {{ form_errors(passwordForm.currentPassword) }}
+                    </div>
+                    <div>
+                        {{ form_label(passwordForm.newPassword.first, null, {label_attr: {class: 'text-sm font-medium text-gray-700'}}) }}
+                        {{ form_widget(passwordForm.newPassword.first, {attr: {class: 'mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm'}}) }}
+                        {{ form_errors(passwordForm.newPassword.first) }}
+                    </div>
+                    <div>
+                        {{ form_label(passwordForm.newPassword.second, null, {label_attr: {class: 'text-sm font-medium text-gray-700'}}) }}
+                        {{ form_widget(passwordForm.newPassword.second, {attr: {class: 'mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm'}}) }}
+                        {{ form_errors(passwordForm.newPassword.second) }}
+                    </div>
+                    <div class="sm:col-span-2">
+                        <button type="submit" class="rounded-md bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600">Update password</button>
+                    </div>
+                {{ form_end(passwordForm) }}
+            </section>
+
+            <section class="rounded-lg border border-red-200 bg-white p-5 shadow-sm">
+                <h2 class="text-lg font-semibold text-red-700 mb-2">Delete account</h2>
+                <p class="text-sm text-gray-600 mb-4">This action is irreversible. Your personal account data will be anonymized.</p>
+                <form method="post" action="{{ path('app_settings_delete_account') }}" onsubmit="return confirm('Are you sure you want to delete your account?');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete_account') }}">
+                    <button type="submit" class="rounded-md border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50">Delete account</button>
+                </form>
+            </section>
+        </div>
+    </main>
+</div>
+{% endblock %}

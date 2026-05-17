@@ -8,7 +8,8 @@
         search: search,
         selectedCategories: selectedCategories,
         sort: sort,
-        cartItemCount: cartItemCount
+        cartItemCount: cartItemCount,
+        savedItemsCount: savedItemsCount
     } %}
 
     <main class="w-full grow px-4 py-6">
@@ -20,12 +21,20 @@
             </section>
 
             <section class="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
-                <div class="mb-4 flex items-center gap-2">
+                <div class="mb-4 flex items-center justify-between gap-2">
                     {% if product.category %}
                         <a href="{{ path('app_shop', {categories: [product.category.id]}) }}" class="inline-flex items-center rounded-full bg-orange-50 px-3 py-1 text-xs font-medium text-orange-700">
                             {{ product.category.name }}
                         </a>
                     {% endif %}
+                    {% set isSaved = product.id in (savedProductIds|default([])) %}
+                    <form method="post" action="{{ path('app_saved_toggle', {id: product.id}) }}" class="js-save-item">
+                        <input type="hidden" name="_token" value="{{ csrf_token('save_' ~ product.id) }}">
+                        <button type="submit" class="inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            {{ ux_icon(isSaved ? 'mdi:heart' : 'mdi:heart-outline', {class: "w-5 h-5"}) }}
+                            <span>{{ isSaved ? 'Saved' : 'Save' }}</span>
+                        </button>
+                    </form>
                 </div>
 
                 <h1 class="text-3xl font-bold text-gray-900">{{ product.name }}</h1>
