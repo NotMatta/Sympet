@@ -2,6 +2,7 @@
 @source not "../../public";
 
 @import url('https://fonts.googleapis.com/css2?family=Lobster&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lobster&family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap');
 
 .lobster-regular {
   font-family: "Lobster", sans-serif;
@@ -9,3 +10,10 @@
   font-style: normal;
 }
 
+.noto-sans {
+  font-family: "Noto Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+  font-variation-settings:
+    "wdth" 100;
+}
