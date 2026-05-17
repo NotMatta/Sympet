@@ -2,6 +2,9 @@
 
 namespace App\Controller;
 
+use App\Repository\CategoryRepository;
+use App\Repository\ProductRepository;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -9,19 +12,73 @@ use Symfony\Component\Routing\Attribute\Route;
 final class ProductController extends AbstractController
 {
     #[Route('/shop', name: 'app_shop')]
-    public function index(): Response
+    public function index(
+        Request $request,
+        ProductRepository $productRepository,
+        CategoryRepository $categoryRepository,
+    ): Response
     {
+        $selectedCategoryIds = array_values(array_unique(array_filter(
+            array_map(
+                static fn (mixed $id): int => (int) $id,
+                (array) $request->query->all('categories'),
+            ),
+            static fn (int $id): bool => $id > 0,
+        )));
 
-        $products = [
-            ['name' => 'Product 1', 'price' => 10.99, "description" => 'Description of Product 1', "image" => 'https://cdn11.bigcommerce.com/s-asivtkjxr8/images/stencil/1280x1280/products/3028/14786/t1agmszxedxmmlflg5mn__40653.1651035119.jpg?c=1'],
-            ['name' => 'Product 2', 'price' => 19.99, "description" => 'Description of Product 2', "image" => 'https://cdn11.bigcommerce.com/s-asivtkjxr8/images/stencil/1280x1280/products/3028/14786/t1agmszxedxmmlflg5mn__40653.1651035119.jpg?c=1'],
-            ['name' => 'Product 3', 'price' => 5.99, "description" => 'Description of Product 3', "image" => 'https://cdn11.bigcommerce.com/s-asivtkjxr8/images/stencil/1280x1280/products/3028/14786/t1agmszxedxmmlflg5mn__40653.1651035119.jpg?c=1'],
-            ['name' => 'Product 4', 'price' => 8.99, "description" => 'Description of Product 4', "image" => 'https://cdn11.bigcommerce.com/s-asivtkjxr8/images/stencil/1280x1280/products/3028/14786/t1agmszxedxmmlflg5mn__40653.1651035119.jpg?c=1'],
-        ];
+        $sort = (string) $request->query->get('sort', 'newest');
+        $allowedSorts = ['newest', 'price_asc', 'price_desc', 'name_asc'];
+        if (!in_array($sort, $allowedSorts, true)) {
+            $sort = 'newest';
+        }
+
+        $search = trim((string) $request->query->get('search', ''));
+        if ($search === '') {
+            $search = null;
+        }
+
+        $page = max(1, $request->query->getInt('page', 1));
+        $limit = 12;
+
+        $result = $productRepository->findShopProducts(
+            $selectedCategoryIds,
+            $search,
+            $sort,
+            $page,
+            $limit,
+        );
+
+        $totalPages = max(1, (int) ceil($result['totalFiltered'] / $limit));
+        if ($page > $totalPages && $result['totalFiltered'] > 0) {
+            $page = $totalPages;
+            $result = $productRepository->findShopProducts(
+                $selectedCategoryIds,
+                $search,
+                $sort,
+                $page,
+                $limit,
+            );
+        }
+
+        $categories = $categoryRepository->findBy([], ['name' => 'ASC']);
 
         return $this->render('product/index.html.twig', [
-            'controller_name' => 'ProductController',
-            'products' => $products,
+            'products' => $result['products'],
+            'categories' => $categories,
+            'selectedCategoryIds' => $selectedCategoryIds,
+            'search' => $search,
+            'sort' => $sort,
+            'sortOptions' => [
+                'newest' => 'Newest first',
+                'price_asc' => 'Price: low to high',
+                'price_desc' => 'Price: high to low',
+                'name_asc' => 'Name: A-Z',
+            ],
+            'totalFiltered' => $result['totalFiltered'],
+            'totalVisible' => $result['totalVisible'],
+            'page' => $page,
+            'totalPages' => $totalPages,
+            'limit' => $limit,
         ]);
     }
 }
